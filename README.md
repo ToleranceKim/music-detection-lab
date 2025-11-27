@@ -120,8 +120,7 @@ pip install -r requirements.txt
 이 프로젝트는 MIT 라이센스하에 배포되지만, **비상업적 용도로만** 사용 가능합니다.
 
 ### 제한사항
-- Deezer Research의 코드가 CC-BY-NC-4.0 라이센스로 포함되어 있어, 전체 프로젝트가 **비상업적 용도**로 제한됩니다
-- 상업적 사용을 원하실 경우 Deezer 관련 코드를 제외하고 사용하거나, Deezer에 별도 문의가 필요합니다
+- Deezer Research의 코드가 CC-BY-NC-4.0 라이센스로 포함되어 있어, 전체 프로젝트가 비상업적 용도로 제한됩니다
 
 ### 원저작물
 - Nicholas Sunday의 코드: MIT License
