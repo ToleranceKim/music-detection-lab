@@ -1,79 +1,128 @@
-# AI Music Defense Lab
+# Music Detection Lab
 
-**AI 생성 음악 탐지(AIGM)**와 **학습불가능 오디오 데이터/방어적 데이터 포이즈닝(ULD/DDP)** 연구실
+**AI 생성 음악 탐지 연구** - Sunday & Afchar 논문 재현 프로젝트
 
 ## 개요
 
-이 저장소는 다음 두 축의 실험과 코드를 모으기 위한 연구용 레포지토리입니다:
+이 레포지토리는 AI가 생성한 음악을 탐지하는 두 가지 주요 연구를 재현하고 비교합니다:
 
-### 1. AI Generated Music Detection (AIGM)
-- 텍스트 투 뮤직 기반 합성 음악과 인간 음악을 구분하는 탐지기 구현
-- Nicholas Sunday, Darius Afchar, Yupei Li 등의 연구 재현 및 변형 실험
+### 재현 논문
 
-### 2. Unlearnable Data / Defensive Data Poisoning for Audio (ULD/DDP)
-- 음악과 음성 데이터가 생성 모델과 화자 인식 모델 등에 학습되지 않도록 보호하는 기법 구현
-- HarmonyCloak, SafeSpeech, PosCUDA, HiddenSpeaker 및 관련 ULD 이론 재현
+1. **Detecting Musical Deepfakes** (Nicholas Sunday, 2025)
+  - CNN 기반 Mel 스펙트로그램 탐지
+  - FakeMusicCaps 데이터셋 활용
+  - 오디오 변조에 대한 강건성 연구
 
-## 프로젝트 구조 (예정)
+2. **AI-Generated Music Detection** (Darius Afchar/Deezer, ICASSP 2025)
+  - 오토인코더 기반 탐지 접근법
+  - 일반화 문제 해결
+  - 스펙트로그램 기반 방법과의 비교
 
-초기 단계에서는 간단하게 시작하여 필요에 따라 확장 예정:
-```
-ai-music-defense-lab/
-├── docs/                   # 연구 계획서 및 문서
-│   └── research_plan.md    # 상세 연구 로드맵
-├── notebooks/              # 실험용 Jupyter 노트북
-├── src/                    # 핵심 코드 (추후 모듈별 확장)
-├── data/                   # 데이터셋 (gitignore에 포함)
-└── requirements.txt        # 의존성 패키지
-```
 
-## 연구 계획
+## 프로젝트 목표
 
-상세 연구 목표와 방법론, 구현 로드맵:
-- [**연구 계획서 전문**](docs/research_plan.md)
+- 두 논문의 최소 구현체(MVP) 재현
+- 성능 및 강건성 비교 분석
+- 통합 데모 애플리케이션 개발
+- 한국어 문서화 및 개발 로그 작성
+
+## 프로젝트 구조
+
+music-detection-lab/
+├── docs/
+│   ├── development_plan.md  # 개발 계획서
+│   ├── dev_log.md           # 개발 진행 로그
+│   └── archive/             # 이전 문서 보관
+│       └── research_plan.md # 전체 연구 계획 (참고용)
+├── src/
+│   ├── sunday/              # Sunday 논문 구현
+│   │   ├── model.py        # ResNet18 기반 CNN
+│   │   ├── dataset.py      # FakeMusicCaps 데이터 로더
+│   │   └── train.py        # 학습 파이프라인
+│   ├── afchar/             # Afchar 논문 구현
+│   │   ├── model.py        # 오토인코더 아키텍처
+│   │   ├── dataset.py      # 데이터 로더
+│   │   └── train.py        # 학습 파이프라인
+│   └── common/             # 공통 유틸리티
+│       ├── audio_io.py     # 오디오 로딩/전처리
+│       ├── features.py     # 특징 추출 (Mel spectrogram 등)
+│       └── augment.py      # 데이터 증강 (pitch, tempo 변조)
+├── experiments/            # 실험 스크립트
+├── notebooks/              # Jupyter 노트북 (탐색적 분석)
+├── demos/                  # Streamlit 데모
+├── data/                   # 데이터셋 (gitignore)
+├── models/                 # 학습된 모델 체크포인트 (gitignore)
+├── requirements.txt        # pip 의존성
+├── pyproject.toml         # 프로젝트 설정 (uv 사용)
+└── uv.lock               # uv 락 파일
 
 ## 시작하기
 
-### 요구사항
-- Python 3.10+
-- PyTorch
-- 오디오 처리 라이브러리 (librosa, torchaudio)
+### 필수 요구사항
+
+- Python 3.12+
+- PyTorch 2.2+
+- CUDA 11.8+ (GPU 사용 시, 선택사항)
+- 최소 8GB RAM (CPU 실행 시)
+- 최소 10GB 디스크 공간 (데이터셋 포함)
 
 ### 설치
-
 ```bash
 # 저장소 클론
-git clone https://github.com/yourusername/ai-music-defense-lab.git
-cd ai-music-defense-lab
+git clone https://github.com/TeleranceKim/music-detection-lab.git
+cd music-detection-lab
 
-# 가상환경 생성
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+# Python 3.12 설정 (pyenv 사용 시)
+pyenv local 3.12
 
-# 의존성 설치
+# uv 설치 (아직 없는 경우)
+pip install uv
+
+# 가상환경 생성 및 패키지 설치
+uv venv
+source .venv/bin/activate # Windows: .venv\Scripts\activate
+uv pip sync requirements.txt
+
+# 설치 확인
+python -c "import torch; print(f'PyTorch {torch.__version__}')"
+python -c "import librosa; print(f'librosa {librosa.__version__}')"
+
 pip install -r requirements.txt
 ```
 
-## 현재 집중 과제
+## 개발 현황
 
-### 1단계 (우선순위)
-- **A1**: Detecting Musical Deepfakes (Nicholas Sunday) 재현
-  - FakeMusicCaps 데이터셋, CNN 기반 탐지기
-- **U1**: SafeSpeech 재현
-  - 악의적인 음성 합성으로부터 음성을 보호하는 기법
+개발 로드맵과 진행 상황은 다음 문서를 참고하세요:
+- [개발 계획서](docs/development_plan.md) - 기술적 구현 세부사항
+- [개발 로그](docs/dev_log.md) - 일별 진행 상황 및 이슈 트래킹
 
-### 2단계
-- **A2**: AI-Generated Music Detection (Darius Afchar/Deezer)
-  - 오토인코더 기반 탐지
-- **U2**: PosCUDA
-  - 오디오 분류 작업을 위한 학습불가능 데이터
+## 참고 문헌
 
-## 주요 참고 문헌
+### 논문
+1. Nicholas Sunday, "Detecting Musical Deepfakes" (2025)
+   - [arXiv:2505.09633](https://arxiv.org/abs/2505.09633)
+   - [GitHub](https://github.com/nicksunday/deepfake-music-detector)
 
-### AIGM 탐지
-- Nicholas Sunday, "Detecting Musical Deepfakes" (2025)
-- Darius Afchar et al., "AI-Generated Music Detection and its Challenges" (ICASSP 2025)
+2. Darius Afchar et al., "AI-Generated Music Detection" (ICASSP 2025)
+   - [arXiv:2405.04181](https://arxiv.org/abs/2405.04181)
+   - [GitHub](https://github.com/deezer/deepfake-detector)
 
-### Unlearnable Data
-- Syed I. A. Meerza et al., "HarmonyCloak: Making Music Unlearnable for Generative AI" (2024)
-- Zhisheng Zhang et al., "SafeSpeech: Robust and Universal Voice Protection" (USENIX Security 2025)
+### 데이터셋
+- **FakeMusicCaps**: AI 생성 음악 데이터셋
+  - [논문](https://arxiv.org/abs/2409.10684)
+  - [GitHub](https://github.com/polimi-ispl/FakeMusicCaps)
+- **MusicCaps**: Google AudioSet 기반 원본 음악
+
+## 라이센스
+
+이 프로젝트는 MIT 라이센스하에 배포되지만, **비상업적 용도로만** 사용 가능합니다.
+
+### 제한사항
+- Deezer Research의 코드가 CC-BY-NC-4.0 라이센스로 포함되어 있어, 전체 프로젝트가 **비상업적 용도**로 제한됩니다
+- 상업적 사용을 원하실 경우 Deezer 관련 코드를 제외하고 사용하거나, Deezer에 별도 문의가 필요합니다
+
+### 원저작물
+- Nicholas Sunday의 코드: MIT License
+- Deezer Research의 코드: CC-BY-NC-4.0
+
+자세한 내용은 [LICENSE](LICENSE) 및 [THIRD_PARTY_LICENSES](THIRD_PARTY_LICENSES) 파일을 참고하세요.
