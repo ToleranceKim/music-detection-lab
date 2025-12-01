@@ -97,4 +97,5 @@ audio_cache/
 # Custom
 experiments/*/results/
 experiments/*/outputs/
-notebooks/scratch/
+notebooks/scratch/models/
+data/
