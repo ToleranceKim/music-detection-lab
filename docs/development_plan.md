@@ -211,3 +211,30 @@ class AfcharDatector(nn.Module):
 - 두 모델 결과 비교
 - 시각화 (스펙트로그램, 신뢰도 점수)
 
+### 6.2 CLI ehrn (`demos/cli.py`)
+
+```bash
+python detect.py --model sunday --input audio.wav
+python detect.py --model afchar --input audio.wav
+python detect.py --model ensemble --input audio.wav
+```
+
+**예상 소요 시간**: 2-3일
+
+---
+
+## 리스크 및 대응
+
+### 기술적 리스크
+1. **데이터셋 접근 문제**
+    - 대응: 대체 데이터셋 사용
+
+2. **GPU 자원 부족**
+    - 대응: 모델 크기 축소, Colab, Runpod 활용
+
+3. **재현 성능 미달**
+    - 대응: 하이퍼파라미터 튜닝, 저자 문의
+
+---
+
+상세 구현 사항은 dev_log.md 에 기록하며 진행합니다. 
