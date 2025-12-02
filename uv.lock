@@ -10,7 +10,7 @@ resolution-markers = [
 ]
 
 [[package]]
-name = "ai-music-defense-lab"
+name = "ai-music-detection-lab"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [

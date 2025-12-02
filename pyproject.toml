@@ -1,5 +1,5 @@
 [project]
-name = "ai-music-defense-lab"
+name = "ai-music-detection-lab"
 version = "0.1.0"
 description = "AI-Generated Music Detection and Unlearnable Data Research"
 requires-python = ">=3.10"
