@@ -208,6 +208,7 @@ def extract_chroma(audio: np.ndarray, sr: int, n_fft: int = 2048, hop_length: in
         'chroma_std': np.std(chroma, axis=1)
     }
 
+
 # 5. 통합 함수 구현
 
 def extract_all_features(audio: np.ndarray, sr: int, feature_types: Optional[List[str]] = None) -> Dict[str, Union[float, np.ndarray]]:
