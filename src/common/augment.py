@@ -169,6 +169,138 @@ def polarity_inversion(audio: np.ndarray) -> np.ndarray:
     return -audio
 
 
+# Frequency Domain Augmentations
+
+def pitch_shift(audio: np.ndarray, sr: int, n_steps: float = 0.0, bins_per_octave: int = 12) -> np.ndarray:
+    """
+    오디오 피치를 변경합니다. (속도는 유지)
+
+    STFT와 phase vocoder를 사용하여 템포를 유지하면서 피치만 변경합니다.
+    다양한 키의 음악에 대해 강건한 모델을 학습시킵니다.
+
+    Args:
+        audio: 입력 오디오 신호
+        sr: 샘플레이트 (Hz)
+        n_steps: 반음 단위 변경량
+            - 양수: 높은 음으로 (예: 2 = 2반음 올림)
+            - 음수: 낮은 음으로 (예: -3 = 3반음 내림)
+            - 12 = 1옥타브
+        bins_per_octave: 옥타브당 빈 수 (미세 조정용)
+
+    Returns:
+        np.ndarray: 피치 변경된 오디오
+
+    Example:
+        >>> higher = pitch_shift(audio, sr, n_steps=2) # 2반음 올리기
+        >>> lower = pitch_shift(audio, sr, n_steps=-5) # 5반음 내리기
+        >>> octave_up = pitch_shift(audio, sr, n_steps=12) # 1옥타브 올리기
+
+    Note:
+        - 극단적인 피치 변경 (±12 이상)은 아티팩트 발생 가능
+        - 실시간 처리에는 부적합 (계산량 많음)
+    """
+    if n_steps == 0:
+        return audio
+
+    return librosa.effects.pitch_shift(audio, sr=sr, n_steps=n_steps, bins_per_octave=bins_per_octave)
+
+def frequency_mask(audio: np.ndarray, sr: int, freq_mask_range: Tuple[float, float] = (0, 0), mask_type: str = 'zero') -> np.ndarray:
+    """
+    특정 주파수 대역을 마스킹합니다.
+
+    STFT 도메인에서 특정 주파수 대역을 제거하거나 감쇄시킵니다.
+    주파수 대역 손실에 강건한 모델을 학습시킵니다.
+
+    Args:
+        audio: 입력 오디오 신호
+        sr: 샘플레이트 (Hz)
+        freq_mask_range: 마스킹할 주파수 범위 (Hz)
+            - (low_freq, high_freq) 튜플
+        mask_type: 마스킹 방식
+            - 'zero': 완전 제거
+            - 'attenuate': 50% 감쇄
+
+    Returns:
+        np.ndarray: 주파수 마스킹된 오디오
+
+    Example:
+        >>> # 보컬 주파수 대역 마스킹
+        >>> masked = frequency_mask(audio, sr, (85, 255))
+        >>> # 고주파 제거
+        >>> no_highs = frequency_mask(audio, sr, (4000, 8000))
+
+    Note:
+        - 극단적인 마스킹은 음질 저하
+        - 저주파 마스킹은 베이스/드럼 제거 효과
+        - 중간 주파수 마스킹은 보컬/멜로디 제거 효과
+    """
+    if freq_mask_range == (0, 0):
+        return audio
+
+    # STFT 변환
+    D = librosa.stft(audio)
+    freqs = librosa.fft_frequencies(sr=sr)
+
+    # 마스킹 인덱스 찾기
+    mask_idx = np.where((freqs >= freq_mask_range[0]) & (freqs <= freq_mask_range[1]))[0]
+
+    if len(mask_idx) > 0:
+        if mask_type == 'zero':
+            D[mask_idx, :] = 0
+        elif mask_type == 'attenuate':
+            D[mask_idx, :] *= 0.5
+
+    # 역변환
+    return librosa.istft(D)
+
+def apply_filter(audio: np.ndarray, sr: int, filter_type: str = 'lowpass', cutoff_freq: float = 1000.0, order: int = 5) -> np.ndarray:
+    """
+    다양한 주파수 필터를 적용합니다.
+
+    Butterworth 필터를 사용하여 특정 주파수 대역을 필터링합니다.
+    다양한 주파수 특성에 강건한 모델을 학습시킵니다.
+
+    Args:
+        audio: 입력 오디오 신호
+        sr: 샘플레이트 (Hz)
+        filter_type: 필터 종류
+            - 'lowpass': 저역통과 (고주파 제거)
+            - 'highpass': 고역통과 (저주파 제거)
+            - 'bandpass': 대역통과 (특정 대역만 통과)
+        cutoff_freq: 차단 주파수 (Hz)
+            - bandpass의 경우 (low, high) 튜플
+        order: 필터 차수 (높을수록 가파른 차단)
+
+    Returns:
+        np.ndarray: 필터링된 오디오
+
+    Example:
+        >>> # 저역통과 필터 (전화 음질 시뮬레이션)
+        >>> filtered = apply_filter(audio, sr, 'lowpass', 3400)
+        >>> # 고역통과 필터 (베이스 제거)
+        >>> no_bass = apply_filter(audio, sr, 'highpass', 200)
+
+    Note:
+        - 너무 낮은/높은 차단 주파수는 무음 생성 가능
+        - order가 높으면 ringing 아티팩트 발생 가능
+    """
+    nyquist = sr / 2
+
+    if filter_type == 'bandpass':
+        if not isinstance(cutoff_freq, tuple):
+            raise ValueError("For bandpass, cutoff_freq must be (low, high) tuple")
+        low, high = cutoff_freq
+        low = low / nyquist
+        high = high / nyquist
+        b, a = signal.butter(order, [low, high], btype='band')
+    else:
+        normalized_cutoff = cutoff_freq / nyquist
+        b, a = signal.butter(order, normalized_cutoff, btype=filter_type)
+
+    # 필터 적용
+    filtered = signal.filtfilt(b, a, audio)
+    return filtered
+
 
 
 
