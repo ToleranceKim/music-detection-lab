@@ -7,7 +7,7 @@ References:
     - Nicholas Sunday "Detecting Musical Deepfakes" (2025)
 
 Core Functions:
-    - time_stretch: 템포 변조 (0.9~1.1)
+    - time_stretch: 템포 변조 (0.8~1.2)
     - pitch_shift: 피치 변조 (-2~+2 semitones)
     - random_augment: Sunday 논문 기반 랜덤 조합
 
@@ -121,7 +121,7 @@ def random_augment(audio: np.ndarray, sr: int,
             None인 경우 기본값 사용
         augment_params: 각 증강 기법의 파라미터
             - 'pitch_shift': {'min': -2, 'max': 2} (semitones)
-            - 'time_stretch': {'min': 0.9, 'max': 1.1} (rate)
+            - 'time_stretch': {'min': 0.8, 'max': 1.2} (rate)
             None인 경우 논문 기본값 사용
 
     Returns:
@@ -166,7 +166,7 @@ def random_augment(audio: np.ndarray, sr: int,
     if augment_params is None:
         augment_params = {
             'pitch_shift': {'min': -2, 'max': 2},      # Sunday: ±2 semitones
-            'time_stretch': {'min': 0.9, 'max': 1.1}   # Sunday: 0.9~1.1
+            'time_stretch': {'min': 0.8, 'max': 1.2}   # Sunday: 0.8~1.2
         }
 
     # 원본 복사 (비파괴적 처리)
@@ -181,11 +181,11 @@ def random_augment(audio: np.ndarray, sr: int,
 
         augmented = pitch_shift(augmented, sr, n_steps)
 
-    # 2. Time stretch 적용 (Sunday 논문: 0.9 ~ 1.1)
+    # 2. Time stretch 적용 (Sunday 논문: 0.8 ~ 1.2)
     if np.random.random() < augment_probs.get('time_stretch', 0.5):
         stretch_params = augment_params.get('time_stretch', {})
-        min_rate = stretch_params.get('min', 0.9)
-        max_rate = stretch_params.get('max', 1.1)
+        min_rate = stretch_params.get('min', 0.8)
+        max_rate = stretch_params.get('max', 1.2)
         rate = np.random.uniform(min_rate, max_rate)
 
         augmented = time_stretch(augmented, sr, rate)
