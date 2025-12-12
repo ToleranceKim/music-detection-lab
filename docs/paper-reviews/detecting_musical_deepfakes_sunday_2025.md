@@ -194,7 +194,7 @@ $$
 - 평균: [0.485, 0.456, 0.406]
 - 표준편차: [0.229, 0.224, 0.225]
 
-즉, Sunday는 오디오 특화 전처리를 새로 정의하지 않고, "Mel Spectrogram을 3채널 이미지로 확장한 뒤 ImageNet 전처리 파이프라인을 그대로 적용하는 전략"을 택합니다.
+논문에 따르면 Mel Spectrogram을 텐서로 변환한 뒤 ImageNet 정규화(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])를 적용합니다. ResNet18이 3채널 입력을 요구하므로 구현 시 채널 변환이 필요하지만, 논문에서는 구체적인 방식을 명시하지 않았습니다.
 
 ## 2.3 모델 구조와 학습 설정
 
@@ -216,7 +216,7 @@ $$
 
 ## 2.4 악의적 조작 시나리오와 데이터셋 변형
 
-Sunday 논문에 따르면, 이 연구는 Deezer연구 [4]에서 제안한 피치와 템포 조작 아이디어를 FakeMusicCaps에 적용해 "조작된 딥페이크가 탐지 모델을 얼마나 쉽게 속일 수 있는가"를 평가합니다.
+논문에 따르면, 이 연구는 Deezer연구 [4]에서 제안한 피치와 템포 조작 아이디어를 FakeMusicCaps에 적용해 "조작된 딥페이크가 탐지 모델을 얼마나 쉽게 속일 수 있는가"를 평가합니다.
 
 논문에서 정의한 네 가지 데이터셋은 다음과 같습니다.
 
@@ -238,7 +238,9 @@ Sunday 논문에 따르면, 이 연구는 Deezer연구 [4]에서 제안한 피�
 
 ## 2.5 평가지표 정의
 
-Sunday는 각 실험 설정에 대해 Accuracy, Precision, Recall, F1 Score, False Positive Rate (FPR), False Negative Rate (FNR)를 사용해 모델 성능을 평가합니다.
+저자는 각 실험 설정에 대해 Accuracy, Precision, Recall, F1 Score, False Positive Rate (FPR), False Negative Rate (FNR)를 사용해 모델 성능을 평가합니다.
+
+**Label 정의**: GitHub 코드 확인 결과, Class 0 = Human (사람 음악), Class 1 = Deepfake (AI 생성 음악)으로 정의되어 있습니다.
 
 혼동 행렬을
 
@@ -276,7 +278,7 @@ Sunday는 이러한 지표를 네 가지 데이터셋(Base, Pitch, Tempo, PitchT
 
 ---
 
-# 3. 실험 재현 계획
+# 3. 재현 실험 설계
 
 이 섹션은 Sunday의 GitHub 레포지토리를 기반으로 한 사용자 재현 실험 계획을 정리한 부분입니다. 실제 수치와 그래프는 추후 별도의 포스트에서 다룰 예정이며, 여기서는 "어떤 구조로 재현할 것인지"만 기록합니다.
 
@@ -325,7 +327,7 @@ Sunday는 이러한 지표를 네 가지 데이터셋(Base, Pitch, Tempo, PitchT
     Deezer 연구에 따르면 피치와 템포 조작이 탐지 모델을 크게 약화사시킬 수 있다는 점이 반복해서 강조됩니다. Sunday는 이 시나리오를 FakeMusicCaps와 ResNet18 설정에 그대로 적용해, 단일 모델에서 조작 전후 성능을 비교합니다. Baseline 대비 Pitch, Tempo, PitchTempo 설정에서 3-4포인트 수준의 성능 저하가 일관되게 나타난다는 점은, "테스트셋 성능만 보고 모델을 신뢰하는 것은 위험하다"는 메시지를 다시 상기시킵니다. 
 
 3. Continuous Learning을 통한 운영 상 트레이드오프 제시
-    논문 Table 1에 따르면 Continuous Learning 실험은 Recall 0.889, FNR 0.111로 사람 음악을 놓치지 않는다는 측면에서는 가장 좋은 결과를 보입니다. 그러나 동시에 FPR 0.217, Precision 0.800, Specificity 0.783으로 거짓 양성이 크게 증가합니다. Sunday는 이를 "사람을 놓치지 않기 위해 딥페이크를 더 많이 놓치는 상태"로 해석할 수 있다고 시사합니다. 시제 서비스에서 어디에 임계값을 둘지, 사람과 딥페이크 중 무엇을 더 위험하게 볼지에 따라 운영 전략이 다라진다는 점을 잘 보여줍니다.
+    논문 Table 1에 따르면 Continuous Learning 실험은 Recall 0.889로 딥페이크 탐지율이 높지만, FPR 0.217로 사람 음악의 21.7%를 딥페이크로 오인합니다. 이는 반복 학습으로 모델이 과도하게 민감해져, 정상 음악까지 의심하는 경향을 보이는 것입니다. Precision 0.800, Specificity 0.783으로 전체적인 정확도는 감소했지만, 딥페이크를 놓치는 것보다 오탐을 감수하는 보수적인 접근으로 볼 수 있습니다. 실제 서비스에서는 이러한 트레이드오프를 고려하여 임계값을 조정해야 합니다.
 
 # 4.2 한계와 주의점
 
@@ -340,6 +342,9 @@ Sunday는 이러한 지표를 네 가지 데이터셋(Base, Pitch, Tempo, PitchT
 
 4. 조작 강도의 범위가 비교적 제한적
     Sunday는 Deezer 연구에서 사용한 것과 유사한 범위의 피치 템포와 조작을 사용합니다.(피치 ±2세미톤, 템포 0.8-1.2배). 논문 결론에서 저자 스스로 더 극단적인 조작, 다른 종류의 오디오 효과(리버브, 에코, 디스토션 등)를 고려할 필요가 있다고 언급합니다. 따라서 현재 결과는 "적당한 수준의 피치와 템포 조작에 대한 강건성"만을 평가한 것에 가깝고, 보다 공격적인 공격 시나리오에 대한 평가는 후속 과제로 남습니다.
+
+5. Image 전이학습의 근본적 한계
+    Mel Spectrogram의 주파수(Y축)와 시간(X축)은 일반 이미지의 공간 정보와 의미가 다릅니다. ImageNet으로 학습된 특징이 오디오 스펙트로그램에 최적화되지 않았을 가능성이 있으며, 이는 피치/템포 조작에 취약한 원인일 수 있습니다.
 
 ## 4.3 음악 산업 적용 가능성
 
@@ -373,6 +378,6 @@ Sunday의 「Detecting Musical Deepfakes」는 FakeMusicCaps와 ResNet18이라�
 [2] A. Agostinelli et al. "MusicLM: Generating Music From Text." arXiv, 2023.  
 [3] M. M. Rahman et al. "SONICS: Synthetic Or Not? Identifying Counterfeit Songs." arXiv, 2024.  
 [4] D. Afchar et al. "Detecting music deepfakes is easy but actually hard." arXiv, 2024.  
-[5] N. Sunday. "Detecting Musical Deepfakes." arXiv:2505.09633, 2025.  
+[5] N. Sunday. "Detecting Musical Deepfakes." arXiv:2505.09633, 2025. (UT Austin coursework)
 [6] nicksunday. "Deepfake Music Detection." GitHub Repository, 2025. [https://github.com/nicksunday/deepfake-music-detector](https://github.com/nicksunday/deepfake-music-detector?utm_source=chatgpt.com)
 
