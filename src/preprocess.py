@@ -156,8 +156,28 @@ def split_fakemusiccaps(data_dir: Union[str, Path], metadata_file: Optional[str]
 
     # sklearn으로 분할
     train_files, test_val_files = train_test_split(audio_files, test_size=0.2, random_state=random_state) # Val + Test
-
     val_files, test_files = train_test_split(test_val_files, test_size = 0.5, raondom_state=random_state) # Val과 Test를 반반
+
+    # 정확한 개수로 조정 (가능한 경우)
+    if total_files == expected_total:
+        train_files = train_files[:8599]
+        val_files = val_files[:1075]
+        test_files = test_files[:1074]
+
+    splits = {
+        'train': train_files,
+        'val': val_files,
+        'test': test_files
+    }
+
+    # 분할 결과 출력
+    print(f"데이터셋 분할 완료:")
+    print(f"    Train: {len(splits['train'])} 샘플")
+    print(f"    Val: {len(splits['val'])} 샘플")
+    print(f"    Test: {len(splits['test'])} 샘플")
+    print(f"    Total: {sum(len(s) for s in splits.values())} 샘플")
+
+    return splits
 
 
 def convert_to_db(spectrogram: np.ndarray, ref: float = 1.0, amin: float = 1e-10) -> np.ndarray:
