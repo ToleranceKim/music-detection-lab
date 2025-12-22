@@ -9,8 +9,6 @@
 
 ## 리뷰를 시작하며
 
-첫 리뷰에서는 AI Music Detection 쪽에서 구현과 실험 구성이 비교적 직관적인 논문을 함께 살펴보려 합니다. 복잡한 모델과 방어 기법으로 바로 들어가기보다, 재현 가능한 예제를 통해 "생성 음악을 기계가 어떻게 구분하지"를 먼저 함께 체감해 보는 것이 목표입니다.
-
 오늘 다룰 Nicholas Sunday의 「Detecting Musical Deepfakes」는 FakeMusicCaps 데이터셋의 오디오를 Mel Spectrogram으로 변환한 뒤 ResNet18 이진 분류기를 학습하는 기본적인 탐지 파이프라인을 제안합니다. 논문과 함께 공식 GitHub 레포지토리가 공개되어 있어 코드를 내려받아 곧바로 학습과 평가를 재현해 볼 수 있고, 전처리와 실험 설정을 바꾸어 보는 것도 비교적 수월합니다.
 
 저자는 Deezer의 연구(Afchar et al, 2024)와 SONICS, FakeMusicCaps 논문을 주요 관련 연구로 검토합니다. 특히 Deezer 연구에서 사용된 피치 쉬프트와 템포 스트레치 조작 시나리오를 FakeMusicCaps와 ResNet18 구성에 다시 적용해, 이런 단순 효과가 탐지 성능을 얼마나 흔들 수 있는지 실험합니다. 이 점에서 Sunday 논문은, SONICS 수준의 복잡한 아키텍처로 넘어가기 전에 "짧은 10초 클립, Mel Spectrogram, 범용 CNN" 이라는 직관적인 조합이 어디까지 작동하는지 보여 주는 출발점 역할을 합니다.
@@ -36,6 +34,9 @@
 |코드|[GitHub Repository](https://github.com/nicksunday/deepfake-music-detector)|
 |주요 데이터셋|FakeMusicCaps[1], MusicLM 관련 MusicCaps[2]|
 |주요 관련 연구|SONICS[3], "Detecting music deepfakes is easy but actually hard"[4]|
+
+**재현 참고사항**: GitHub 저장소에는 Jupyter notebook 형태의 실험 코드가 포함되어 있으며, 
+본 재현 구현은 논문에 기술된 아키텍처와 하이퍼파라미터를 기반으로 PyTorch로 재구현한 것입니다.
 
 ---
 
@@ -240,7 +241,7 @@ $$
 
 저자는 각 실험 설정에 대해 Accuracy, Precision, Recall, F1 Score, False Positive Rate (FPR), False Negative Rate (FNR)를 사용해 모델 성능을 평가합니다.
 
-**Label 정의**: GitHub 코드 확인 결과, Class 0 = Human (사람 음악), Class 1 = Deepfake (AI 생성 음악)으로 정의되어 있습니다.
+**Label 정의**: 논문과 GitHub 저장소 설명을 통해 Class 0 = Human (사람 음악), Class 1 = Deepfake (AI 생성 음악)으로 정의됨을 확인했습니다.
 
 혼동 행렬을
 
